@@ -2,10 +2,10 @@ package srcds
 
 import (
 	"net"
-	"srcds_proxy/server/model/conntrack"
-	"srcds_proxy/server/model/srcds_connection"
-	"srcds_proxy/server/controller"
-	"srcds_proxy/server/worker"
+	"srcds_proxy/proxy/model/conntrack"
+	"srcds_proxy/proxy/model/srcds_connection"
+	"srcds_proxy/proxy/controller"
+	"srcds_proxy/proxy/worker"
 	)
 
 type clientHandler struct {
@@ -21,9 +21,9 @@ func NewClientHandler(conntrack conntrack.ConnectionTable, listenConn srcds_conn
 }
 
 func (h *clientHandler) Handle(buffer []byte, addr net.UDPAddr, n int) error {
-	// Handle will handle the incoming connections to the proxy. It will forward every byte received to the server.
+	// Handle will handle the incoming connections to the proxy. It will forward every byte received to the proxy.
 	// If it is a new connection, it will add an entry to the connection table and instantiate a controller that will listen
-	// for responses from the server.
+	// for responses from the proxy.
 
 	clientConn, err := h.conntrack.GetConnection(addr)
 	if err == conntrack.NoConnectionAssociatedError {
@@ -49,7 +49,7 @@ func (h *clientHandler) createConnectionAndWorker(addr net.UDPAddr) (*srcds_conn
 		return nil, err
 	}
 
-	// Create a controller that will process the responses from the server.
+	// Create a controller that will process the responses from the proxy.
 	worker.NewProxyWorker(*conn, NewServerHandler(addr, h.listenConn))
 
 	return conn, nil

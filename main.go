@@ -1,13 +1,13 @@
 package main
 
 import (
-	"srcds_proxy/server"
+	"srcds_proxy/proxy"
 	"log"
 )
 
 func main() {
 	for {
-		server.Launch()
+		proxy.Launch()
 		log.Print("Proxy crashed, restarting...")
 	}
 }

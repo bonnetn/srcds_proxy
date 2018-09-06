@@ -1,12 +1,12 @@
-package server
+package proxy
 
 import (
 	"log"
 	"runtime"
-	"srcds_proxy/server/worker"
-	"srcds_proxy/server/model/conntrack"
-	"srcds_proxy/server/controller/srcds"
-	"srcds_proxy/server/model/srcds_connection"
+	"srcds_proxy/proxy/worker"
+	"srcds_proxy/proxy/model/conntrack"
+	"srcds_proxy/proxy/controller/srcds"
+	"srcds_proxy/proxy/model/srcds_connection"
 )
 
 const (

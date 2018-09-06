@@ -2,8 +2,8 @@ package worker
 
 import (
 	"net"
-	"srcds_proxy/server/model/srcds_connection"
-	"srcds_proxy/server/controller"
+	"srcds_proxy/proxy/model/srcds_connection"
+	"srcds_proxy/proxy/controller"
 )
 
 type Worker interface {

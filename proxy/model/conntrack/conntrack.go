@@ -4,7 +4,7 @@ import (
 	"net"
 	"sync"
 	"errors"
-	"srcds_proxy/server/model/srcds_connection"
+	"srcds_proxy/proxy/model/srcds_connection"
 )
 
 var NoConnectionAssociatedError = errors.New("no connection associated with that address")
@@ -22,7 +22,7 @@ type connectionTableImpl struct {
 }
 
 func NewConnectionTable(serverAddr string) (ConnectionTable) {
-	// NewConnectionTable will create a connection table that maps client sockets to server sockets.
+	// NewConnectionTable will create a connection table that maps client sockets to proxy sockets.
 
 	return &connectionTableImpl{
 		Mutex:         sync.Mutex{},
