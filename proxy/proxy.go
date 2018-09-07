@@ -2,49 +2,61 @@ package proxy
 
 import (
 	"log"
+	"srcds_proxy/proxy/srcds"
+	"srcds_proxy/proxy/handler"
+	"srcds_proxy/proxy/conntrack"
+	"srcds_proxy/proxy/config"
+	"net"
 	"runtime"
-	"srcds_proxy/proxy/worker"
-	"srcds_proxy/proxy/model/conntrack"
-	"srcds_proxy/proxy/controller/srcds"
-	"srcds_proxy/proxy/model/srcds_connection"
+	"sync"
+	"context"
 )
 
-const (
-	ListenAddr = "" // Listen to every address
-	ListenPort = "1234"
-	ServerAddr = "127.0.0.1"
-	ServerPort = "27016"
+func doServe(ctx context.Context, handler srcds.Handler, conn *net.UDPConn) <-chan error {
+	var (
+		resultChan = make(chan error)
+		wg         = sync.WaitGroup{}
+		numCPU     = runtime.NumCPU()
+	)
 
-	ListenFullAddr = ListenAddr + ":" + ListenPort
-	ServerFullAddr = ServerAddr + ":" + ServerPort
-)
+	wg.Add(numCPU)
+	go func() {
+		wg.Wait()
+		close(resultChan)
+	}()
+
+	for i := 0; i < numCPU; i++ {
+		go func() {
+			resultChan <- srcds.Serve(ctx, *conn, handler)
+			wg.Done()
+		}()
+	}
+
+	return resultChan
+}
 
 func Launch() error {
-
-	listenConn, err := srcds_connection.NewSRCDSInboundConnection(ListenFullAddr)
-	if err != nil {
-		log.Print("could not create input connection: ", err)
-		return err
-	}
-	defer listenConn.Close()
-
-	connectionTable := conntrack.NewConnectionTable(ServerFullAddr)
-	defer connectionTable.CloseAllConnections()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	var (
-		workerCount = runtime.NumCPU()
-		workers     = make([]worker.Worker, workerCount)
+		connectionTable = conntrack.NewConnectionTable()
+		h               = handler.NewRequestProcessorHandler(connectionTable)
 	)
-	log.Println("Starting proxy workers...")
-	for i := 0; i < workerCount; i++ {
-		workers[i] = worker.NewProxyWorker(*listenConn, srcds.NewClientHandler(connectionTable, *listenConn))
+
+	log.Println("Listening on ", config.ListenFullAddr)
+	conn, err := srcds.Listen(ctx, config.ListenFullAddr)
+	if err != nil {
+		log.Println("Could not listen: ", err)
+		return err
 	}
 
-	log.Println("Proxy started! Listening for datagrams...")
-	for i := 0; i < workerCount; i++ {
-		if err = workers[i].Join(); err != nil {
-			log.Println("Worker ", i, "crashed: ", err)
+	log.Println("Starting proxy...")
+	for err := range doServe(ctx, h, conn) {
+		if err != nil {
+			log.Print("ERROR: ", err)
 		}
+		cancel() // Kill all workers and close all connections if one worker crashes.
 	}
 	log.Println("Proxy stopped.")
 
