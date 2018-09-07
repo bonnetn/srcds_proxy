@@ -7,27 +7,31 @@ import (
 	"srcds_proxy/proxy/conntrack"
 	"srcds_proxy/proxy/config"
 	"net"
-	"runtime"
 	"sync"
-	"context"
 )
 
-func doServe(ctx context.Context, handler srcds.Handler, conn *net.UDPConn) <-chan error {
+func doServe(done <-chan struct{}, handler srcds.Handler, conn *net.UDPConn) <-chan error {
 	var (
 		resultChan = make(chan error)
 		wg         = sync.WaitGroup{}
-		numCPU     = runtime.NumCPU()
 	)
 
-	wg.Add(numCPU)
+	// Close the result chan when all the workers have stopped.
+	wg.Add(config.WorkerCount)
 	go func() {
 		wg.Wait()
 		close(resultChan)
 	}()
 
-	for i := 0; i < numCPU; i++ {
+	// Ensure workers terminate when done event received.
+	go func() {
+		<-done
+		conn.Close()
+	}()
+
+	for i := 0; i < config.WorkerCount; i++ {
 		go func() {
-			resultChan <- srcds.Serve(ctx, *conn, handler)
+			resultChan <- srcds.Serve(done, *conn, handler)
 			wg.Done()
 		}()
 	}
@@ -36,29 +40,35 @@ func doServe(ctx context.Context, handler srcds.Handler, conn *net.UDPConn) <-ch
 }
 
 func Launch() error {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	log.Println("INFO: Listening on ", config.ListenFullAddr)
+	conn, err := srcds.Listen(config.ListenFullAddr)
+	if err != nil {
+		log.Println("ERROR: Could not listen: ", err)
+		return err
+	}
 
 	var (
 		connectionTable = conntrack.NewConnectionTable()
 		h               = handler.NewRequestProcessorHandler(connectionTable)
+		done            = make(chan struct{})
+		running         = true
 	)
-
-	log.Println("Listening on ", config.ListenFullAddr)
-	conn, err := srcds.Listen(ctx, config.ListenFullAddr)
-	if err != nil {
-		log.Println("Could not listen: ", err)
-		return err
-	}
-
-	log.Println("Starting proxy...")
-	for err := range doServe(ctx, h, conn) {
+	log.Println("INFO: Starting proxy...")
+	for err := range doServe(done, h, conn) {
 		if err != nil {
 			log.Print("ERROR: ", err)
+		} else {
+			log.Print("INFO: Worker exited gracefully.")
 		}
-		cancel() // Kill all workers and close all connections if one worker crashes.
+
+		// Kill all workers and close all connections if one worker crashes.
+		if running {
+			log.Print("WARN: A worker crashed, killing all other workers.")
+			close(done)
+			running = false
+		}
 	}
-	log.Println("Proxy stopped.")
+	log.Println("INFO: Proxy stopped.")
 
 	return nil
 }

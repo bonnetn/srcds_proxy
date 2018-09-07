@@ -3,7 +3,8 @@ package handler
 import (
 	"srcds_proxy/proxy/conntrack"
 	"srcds_proxy/proxy/srcds"
-			"srcds_proxy/proxy/config"
+	"srcds_proxy/proxy/config"
+	"context"
 )
 
 type requestProcessorHandler struct {
@@ -16,7 +17,8 @@ func NewRequestProcessorHandler(table conntrack.ConnectionTable) srcds.Handler {
 	}
 }
 
-func (h *requestProcessorHandler) Handle(responseWriter srcds.ConnectionWriter, msg srcds.Message, addr srcds.AddressPort) error {
+func (h *requestProcessorHandler) Handle(
+	ctx context.Context, responseWriter srcds.ConnectionWriter, msg srcds.Message, addr srcds.AddressPort) error {
 	// Handle will handle the incoming connections to the proxy. It will forward every byte received to the proxy.
 	// If it is a new connection, it will add an entry to the connection table and instantiate a controller that will
 	// listen for responses from the proxy.

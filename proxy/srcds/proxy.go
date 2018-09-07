@@ -2,8 +2,9 @@ package srcds
 
 import (
 	"net"
-		"context"
-	)
+	"context"
+	"srcds_proxy/proxy/config"
+)
 
 func Dial(addr string) (*net.UDPConn, error) {
 	// Dial will create an UDP connection.
@@ -24,7 +25,7 @@ func Dial(addr string) (*net.UDPConn, error) {
 	return connection, nil
 }
 
-func Listen(ctx context.Context, addr string) (*net.UDPConn, error) {
+func Listen(addr string) (*net.UDPConn, error) {
 	// Listen will create a listening UDP connection.
 	laddr, err := net.ResolveUDPAddr("udp", addr)
 	if err != nil {
@@ -36,12 +37,6 @@ func Listen(ctx context.Context, addr string) (*net.UDPConn, error) {
 		return nil, err
 	}
 
-	// Ensure connection is always eventually closed.
-	go func() {
-		<-ctx.Done()
-		connection.Close()
-	}()
-
 	if err = setSRCSConnectionOptions(connection); err != nil {
 		return nil, err
 	}
@@ -49,7 +44,7 @@ func Listen(ctx context.Context, addr string) (*net.UDPConn, error) {
 	return connection, nil
 }
 
-func Serve(ctx context.Context, connection net.UDPConn, handler Handler) error {
+func Serve(done <-chan struct{}, connection net.UDPConn, handler Handler) error {
 	// Serve will read data from a the connection to a buffer and call the handler provided.
 	var (
 		n          int
@@ -58,25 +53,39 @@ func Serve(ctx context.Context, connection net.UDPConn, handler Handler) error {
 		buf        = make([]byte, MaxDatagramSize)
 	)
 	for {
+		// Read into buffer.
+		n, sourceAddr, err = connection.ReadFromUDP(buf)
+
+		// If a done event has been emitted, then do not handle the message.
+		// When the done event is emitted, the connection is also terminated, so Serve actually immediately stops.
 		select {
-			case <-ctx.Done():
-				return nil
-			default:
+		case <-done:
+			return nil
+		default:
 		}
 
-		n, sourceAddr, err = connection.ReadFromUDP(buf)
+		// Check for Read error.
 		if err != nil {
 			return err
 		}
 
-		if n != 0 {
-			msg := BytesToMessage(buf[:n])
-			responseWriter := NewConnectionWriter(connection, sourceAddr) // object to respond
-			if err = handler.Handle(responseWriter, msg, UDPAddrToAddressPort(*sourceAddr)); err != nil {
-				return err
-			}
+		if err := doHandle(buf[:n], connection, sourceAddr, handler); err != nil {
+			return err
 		}
 	}
+}
+
+func doHandle(buf []byte, connection net.UDPConn, sourceAddr *net.UDPAddr, handler Handler) error {
+	if len(buf) == 0 {
+		return nil
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), config.HandleTimeout)
+	defer cancel()
+
+	msg := BytesToMessage(buf)
+	responseWriter := NewConnectionWriter(connection, sourceAddr)
+	return handler.Handle(ctx, responseWriter, msg, UDPAddrToAddressPort(*sourceAddr))
 }
 
 func setSRCSConnectionOptions(connection *net.UDPConn) error {
