@@ -56,8 +56,10 @@ func Serve(done <-chan struct{}, connection net.UDPConn, handler Handler) error 
 		// Read into buffer.
 		n, sourceAddr, err = connection.ReadFromUDP(buf)
 
-		// If a done event has been emitted, then do not handle the message.
-		// When the done event is emitted, the connection is also terminated, so Serve actually immediately stops.
+		// When a done event is emitted, exit without handling the message.
+		// When the done event is emitted, the connection is also terminated. Thus ReadFromUDP immediately stop with an
+		// error but before actually checking the error, we check that the task is not done. So basically, when there is
+		// a "done" event, Serve immediately stops.
 		select {
 		case <-done:
 			return nil
