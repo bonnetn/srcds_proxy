@@ -10,35 +10,6 @@ import (
 	"sync"
 )
 
-func doServe(done <-chan struct{}, handler srcds.Handler, conn *net.UDPConn) <-chan error {
-	var (
-		resultChan = make(chan error)
-		wg         = sync.WaitGroup{}
-	)
-
-	// Close the result chan when all the workers have stopped.
-	wg.Add(config.WorkerCount)
-	go func() {
-		wg.Wait()
-		close(resultChan)
-	}()
-
-	// Ensure workers terminate when done event received.
-	go func() {
-		<-done
-		conn.Close()
-	}()
-
-	for i := 0; i < config.WorkerCount; i++ {
-		go func() {
-			resultChan <- srcds.Serve(done, *conn, handler)
-			wg.Done()
-		}()
-	}
-
-	return resultChan
-}
-
 func Launch() error {
 	log.Println("INFO: Listening on ", config.ListenFullAddr)
 	conn, err := srcds.Listen(config.ListenFullAddr)
@@ -71,4 +42,33 @@ func Launch() error {
 	log.Println("INFO: Proxy stopped.")
 
 	return nil
+}
+
+func doServe(done <-chan struct{}, handler srcds.Handler, conn *net.UDPConn) <-chan error {
+	var (
+		resultChan = make(chan error)
+		wg         = sync.WaitGroup{}
+	)
+
+	// Close the result chan when all the workers have stopped.
+	wg.Add(config.WorkerCount)
+	go func() {
+		wg.Wait()
+		close(resultChan)
+	}()
+
+	// Ensure workers terminate when done event received.
+	go func() {
+		<-done
+		conn.Close()
+	}()
+
+	for i := 0; i < config.WorkerCount; i++ {
+		go func() {
+			resultChan <- srcds.Serve(done, *conn, handler)
+			wg.Done()
+		}()
+	}
+
+	return resultChan
 }
