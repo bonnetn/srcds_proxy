@@ -8,7 +8,8 @@ import (
 const (
 	listenAddr    = "" // Listen to every address
 	listenPort    = "1234"
-	serverAddr    = "127.0.0.1"
+	serverAddr    = "91.121.51.22" +
+		"0"
 	serverPort    = "27016"
 	HandleTimeout = 5 * time.Second
 
