@@ -71,19 +71,27 @@ func Serve(done <-chan struct{}, connection net.UDPConn, handler Handler) error 
 			return err
 		}
 
-		if err := doHandle(buf[:n], connection, sourceAddr, handler); err != nil {
+		if err := doHandle(done, buf[:n], connection, sourceAddr, handler); err != nil {
 			return err
 		}
 	}
 }
 
-func doHandle(buf []byte, connection net.UDPConn, sourceAddr *net.UDPAddr, handler Handler) error {
+func doHandle(done <-chan struct{}, buf []byte, connection net.UDPConn, sourceAddr *net.UDPAddr, handler Handler) error {
 	if len(buf) == 0 {
 		return nil
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), config.HandleTimeout)
-	defer cancel()
+	// If done event is sent, cancel all requests processing.
+	ctx, cancelDone := context.WithCancel(context.Background())
+	go func() {
+		<-done
+		cancelDone()
+	}()
+
+	// Handler has limited time to process the message.
+	ctx, cancelTimeout := context.WithTimeout(ctx, config.HandleTimeout)
+	defer cancelTimeout()
 
 	msg := BytesToMessage(buf)
 	responseWriter := NewConnectionWriter(connection, sourceAddr)

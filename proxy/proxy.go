@@ -11,17 +11,10 @@ import (
 )
 
 func Launch() error {
-	log.Println("INFO: Listening on ", config.ListenFullAddr)
-	conn, err := srcds.Listen(config.ListenFullAddr)
-	if err != nil {
-		log.Println("ERROR: Could not listen: ", err)
-		return err
-	}
-
 	var (
-		connectionTable = conntrack.NewConnectionTable()
-		h               = handler.NewRequestProcessorHandler(connectionTable)
 		done            = make(chan struct{})
+		connectionTable = conntrack.NewConnectionTable()
+		h               = handler.NewRequestProcessorHandler(connectionTable, done)
 		running         = true
 	)
 	log.Println("INFO: Starting proxy...")
@@ -49,6 +42,12 @@ func doServe(done <-chan struct{}, handler srcds.Handler, conn *net.UDPConn) <-c
 		resultChan = make(chan error)
 		wg         = sync.WaitGroup{}
 	)
+
+	conn, err := srcds.Listen(config.ListenFullAddr)
+	if err != nil {
+		log.Println("ERROR: Could not listen: ", err)
+		return err
+	}
 
 	// Close the result chan when all the workers have stopped.
 	wg.Add(config.WorkerCount)
