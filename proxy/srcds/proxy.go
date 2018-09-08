@@ -4,6 +4,8 @@ import (
 	"net"
 	"context"
 	"srcds_proxy/proxy/config"
+	"time"
+	"log"
 )
 
 func Dial(addr string) (*net.UDPConn, error) {
@@ -44,14 +46,24 @@ func Listen(addr string) (*net.UDPConn, error) {
 	return connection, nil
 }
 
-func Serve(done <-chan struct{}, connection net.UDPConn, handler Handler) error {
+func Serve(done <-chan struct{}, connection net.UDPConn, handler Handler, timeout time.Duration) error {
 	// Serve will read data from a the connection to a buffer and call the handler provided.
 	var (
 		n          int
 		sourceAddr *net.UDPAddr
 		err        error
 		buf        = make([]byte, MaxDatagramSize)
+		timer      *time.Timer // destruction timer, when it triggers, stop the Serve function.
 	)
+
+	if timeout > 0 {
+		timer = time.NewTimer(timeout)
+		go func() {
+			<-timer.C
+			connection.Close()
+		}()
+	}
+
 	for {
 		// Read into buffer.
 		n, sourceAddr, err = connection.ReadFromUDP(buf)
@@ -64,6 +76,13 @@ func Serve(done <-chan struct{}, connection net.UDPConn, handler Handler) error 
 		case <-done:
 			return nil
 		default:
+		}
+
+		// If there is a valid message received, reset the destruction timer. If the timer has expired, do not handle
+		// the message and return.
+		if timeout > 0 && !timer.Reset(timeout) {
+			log.Print("DEBUG: Stop Serve after timeout.")
+			return nil
 		}
 
 		// Check for Read error.

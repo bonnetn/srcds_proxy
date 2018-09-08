@@ -5,6 +5,7 @@ import (
 	"srcds_proxy/proxy/srcds"
 	"srcds_proxy/proxy/config"
 	"context"
+	"log"
 )
 
 type requestProcessorHandler struct {
@@ -34,24 +35,24 @@ func (h *requestProcessorHandler) Handle(
 	if !h.connectionTable.HasConnection(addr) {
 		// If it is the first message received by this client, make a new connection to the server that will be used to
 		// forward the messages from this client.
-		//log.Print("New client: ", addr.String())
+		log.Print("DEBUG: New client: ", addr.String())
 		udpConn, err := srcds.Dial(config.ServerFullAddr)
 		if err != nil {
 			return err
 		}
 		conn := srcds.NewConnectionWriter(*udpConn, nil)
 
-		//log.Print("-> Create connection to ", udpConn.RemoteAddr().String())
 		serverConn = h.connectionTable.GetOrStoreConnection(addr, conn)
 
 		// Make a worker that will listen to the newly created connection and that will forward back every response.
 		go func() {
 			handler := NewResponseProcessorHandler(responseWriter)
-			srcds.Serve(h.done, *udpConn, handler)
+			srcds.Serve(h.done, *udpConn, handler, config.ServerConnectionTimeout)
+			h.connectionTable.RemoveConnection(addr)
 		}()
 
 	} else {
-		//log.Print("Known client: ", addr.String())
+		log.Print("DEBUG: Known client: ", addr.String())
 		serverConn, err = h.connectionTable.GetConnection(addr)
 		if err != nil {
 			return err

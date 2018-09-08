@@ -12,6 +12,7 @@ const (
 		"0"
 	serverPort    = "27016"
 	HandleTimeout = 5 * time.Second
+	ServerConnectionTimeout = 1 * time.Minute
 
 	ListenFullAddr = listenAddr + ":" + listenPort
 	ServerFullAddr = serverAddr + ":" + serverPort

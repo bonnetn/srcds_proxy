@@ -6,7 +6,6 @@ import (
 	"srcds_proxy/proxy/handler"
 	"srcds_proxy/proxy/conntrack"
 	"srcds_proxy/proxy/config"
-	"net"
 	"sync"
 )
 
@@ -14,11 +13,11 @@ func Launch() error {
 	var (
 		done            = make(chan struct{})
 		connectionTable = conntrack.NewConnectionTable()
-		h               = handler.NewRequestProcessorHandler(connectionTable, done)
+		h               = handler.NewRequestProcessorHandler(done, connectionTable)
 		running         = true
 	)
 	log.Println("INFO: Starting proxy...")
-	for err := range doServe(done, h, conn) {
+	for err := range doServe(done, h) {
 		if err != nil {
 			log.Print("ERROR: ", err)
 		} else {
@@ -37,7 +36,7 @@ func Launch() error {
 	return nil
 }
 
-func doServe(done <-chan struct{}, handler srcds.Handler, conn *net.UDPConn) <-chan error {
+func doServe(done <-chan struct{}, handler srcds.Handler) <-chan error {
 	var (
 		resultChan = make(chan error)
 		wg         = sync.WaitGroup{}
@@ -46,7 +45,9 @@ func doServe(done <-chan struct{}, handler srcds.Handler, conn *net.UDPConn) <-c
 	conn, err := srcds.Listen(config.ListenFullAddr)
 	if err != nil {
 		log.Println("ERROR: Could not listen: ", err)
-		return err
+		retChan := make(chan error)
+		go func() { retChan <- err }()
+		return retChan
 	}
 
 	// Close the result chan when all the workers have stopped.
@@ -64,7 +65,7 @@ func doServe(done <-chan struct{}, handler srcds.Handler, conn *net.UDPConn) <-c
 
 	for i := 0; i < config.WorkerCount; i++ {
 		go func() {
-			resultChan <- srcds.Serve(done, *conn, handler)
+			resultChan <- srcds.Serve(done, *conn, handler, 0)
 			wg.Done()
 		}()
 	}

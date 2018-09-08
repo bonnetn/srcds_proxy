@@ -12,6 +12,7 @@ type ConnectionTable interface {
 	GetConnection(srcds.AddressPort) (srcds.ConnectionWriter, error)
 	GetOrStoreConnection(srcds.AddressPort, srcds.ConnectionWriter) srcds.ConnectionWriter
 	HasConnection(srcds.AddressPort) bool
+	RemoveConnection(srcds.AddressPort)
 }
 
 func NewConnectionTable() ConnectionTable {
@@ -39,4 +40,8 @@ func (tbl *connectionTableImpl) GetConnection(addr srcds.AddressPort) (srcds.Con
 func (tbl *connectionTableImpl) GetOrStoreConnection(addr srcds.AddressPort, writer srcds.ConnectionWriter) srcds.ConnectionWriter {
 	conn, _ := tbl.LoadOrStore(addr, writer)
 	return conn.(srcds.ConnectionWriter)
+}
+
+func (tbl *connectionTableImpl) RemoveConnection(addr srcds.AddressPort) {
+	tbl.Delete(addr)
 }
