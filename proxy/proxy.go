@@ -4,17 +4,15 @@ import (
 	"log"
 	"srcds_proxy/proxy/srcds"
 	"srcds_proxy/proxy/handler"
-	"srcds_proxy/proxy/conntrack"
 	"srcds_proxy/proxy/config"
 	"sync"
 )
 
 func Launch() error {
 	var (
-		done            = make(chan struct{})
-		connectionTable = conntrack.NewConnectionTable()
-		h               = handler.NewRequestProcessorHandler(done, connectionTable)
-		running         = true
+		done    = make(chan struct{})
+		h       = handler.NewRequestProcessorHandler(done)
+		running = true
 	)
 	log.Println("INFO: Starting proxy...")
 	for err := range doServe(done, h) {

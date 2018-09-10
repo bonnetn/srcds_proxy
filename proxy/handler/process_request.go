@@ -1,23 +1,21 @@
 package handler
 
 import (
-	"srcds_proxy/proxy/conntrack"
 	"srcds_proxy/proxy/srcds"
 	"srcds_proxy/proxy/config"
 	"context"
 	"log"
+	"srcds_proxy/proxy/conntrack"
 )
 
 type requestProcessorHandler struct {
 	// requestProcessorHandler forwards the client messages to the server by managing connections in the conntable.
-	done            <-chan struct{}
-	connectionTable conntrack.ConnectionTable
+	done <-chan struct{}
 }
 
-func NewRequestProcessorHandler(done <-chan struct{}, table conntrack.ConnectionTable) srcds.Handler {
+func NewRequestProcessorHandler(done <-chan struct{}) srcds.Handler {
 	return &requestProcessorHandler{
-		done:            done,
-		connectionTable: table,
+		done: done,
 	}
 }
 
@@ -31,8 +29,9 @@ func (h *requestProcessorHandler) Handle(
 	var (
 		serverConn srcds.ConnectionWriter
 		err        error
+		connTable  = conntrack.GetConnectionTable()
 	)
-	if !h.connectionTable.HasConnection(addr) {
+	if !connTable.HasConnection(addr) {
 		// If it is the first message received by this client, make a new connection to the server that will be used to
 		// forward the messages from this client.
 		log.Print("DEBUG: New client: ", addr.String())
@@ -42,18 +41,18 @@ func (h *requestProcessorHandler) Handle(
 		}
 		conn := srcds.NewConnectionWriter(*udpConn, nil)
 
-		serverConn = h.connectionTable.GetOrStoreConnection(addr, conn)
+		serverConn = connTable.GetOrStoreConnection(addr, conn)
 
 		// Make a worker that will listen to the newly created connection and that will forward back every response.
 		go func() {
 			handler := NewResponseProcessorHandler(responseWriter)
 			srcds.Serve(h.done, *udpConn, handler, config.ServerConnectionTimeout)
-			h.connectionTable.RemoveConnection(addr)
+			connTable.RemoveConnection(addr)
 		}()
 
 	} else {
 		log.Print("DEBUG: Known client: ", addr.String())
-		serverConn, err = h.connectionTable.GetConnection(addr)
+		serverConn, err = connTable.GetConnection(addr)
 		if err != nil {
 			return err
 		}

@@ -15,10 +15,16 @@ type ConnectionTable interface {
 	RemoveConnection(srcds.AddressPort)
 }
 
-func NewConnectionTable() ConnectionTable {
-	return &connectionTableImpl{
-		Map: sync.Map{},
-	}
+var instance *connectionTableImpl
+var once sync.Once
+
+func GetConnectionTable() ConnectionTable {
+	once.Do(func() {
+		instance = &connectionTableImpl{
+			Map: sync.Map{},
+		}
+	})
+	return instance
 }
 
 type connectionTableImpl struct {
