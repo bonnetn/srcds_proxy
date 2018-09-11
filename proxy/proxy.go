@@ -36,7 +36,7 @@ func forwardMessages(done <-chan utils.DoneEvent, from, to srcds.Connection) {
 		select {
 		case <-done:
 			return
-		case msg = <-from.InputChannel()
+		case msg = <-from.InputChannel():
 			to.OutputChannel() <- msg
 		}
 	}
