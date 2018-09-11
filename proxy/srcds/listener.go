@@ -25,14 +25,34 @@ func (l *Listener) Accept(done chan utils.DoneEvent) <-chan Connection {
 			if err != nil {
 				return
 			}
+			addr := UDPAddrToAddressPort(*raddr)
 
-			clientConnection := NewClientConnection(done, l.conn, *raddr, BytesToMessage(buffer[:n]))
-			conn, loaded := clientConnTable.GetOrReplace(UDPAddrToAddressPort(*raddr), clientConnection)
+			killChan := make(chan utils.DoneEvent)
+			clientConnection := NewClientConnection(channelOr(done, killChan), l.conn, *raddr, BytesToMessage(buffer[:n]))
+			conn, loaded := clientConnTable.GetOrReplace(addr, clientConnection)
 			if !loaded {
 				result <- conn
+			} else {
+				close(killChan) // If this connection is not used, kill all the workers.
 			}
 		}
 
 	}()
 	return result
+}
+
+func channelOr(a, b <-chan utils.DoneEvent) <-chan utils.DoneEvent {
+	orChan := make(chan utils.DoneEvent)
+	go func() {
+		defer close(orChan)
+		for {
+			select {
+			case <-a:
+				return
+			case <-b:
+				return
+			}
+		}
+	}()
+	return orChan
 }
