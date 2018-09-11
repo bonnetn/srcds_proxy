@@ -9,5 +9,7 @@ func MessageToBytes(m Message) []byte {
 }
 
 func BytesToMessage(b []byte) Message {
-	return b
+	c := make([]byte, len(b))
+	copy(c, b)
+	return c
 }

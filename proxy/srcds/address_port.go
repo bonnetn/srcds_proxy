@@ -22,7 +22,6 @@ func (a *AddressPort) String() string {
 	return fmt.Sprintf("%s:%d", a.getIP().String(), a.getPort())
 
 }
-
 func (a *AddressPort) getIP() net.IP {
 	return net.IPv4(a.ip[0], a.ip[1], a.ip[2], a.ip[3])
 }
@@ -30,4 +29,3 @@ func (a *AddressPort) getIP() net.IP {
 func (a *AddressPort) getPort() int {
 	return int(a.port)
 }
-
