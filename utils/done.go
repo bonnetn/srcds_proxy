@@ -1,4 +1,4 @@
-package srcds
+package utils
 
 type DoneEvent struct{}
 

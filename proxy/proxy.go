@@ -4,10 +4,11 @@ import (
 	"log"
 	"srcds_proxy/proxy/srcds"
 	"srcds_proxy/proxy/config"
-	)
+	"srcds_proxy/utils"
+)
 
 func Launch() error {
-	done := make(chan srcds.DoneEvent)
+	done := make(chan utils.DoneEvent)
 	defer close(done)
 
 	log.Println("INFO: Starting proxy...")

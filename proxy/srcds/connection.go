@@ -1,13 +1,16 @@
 package srcds
 
-import "net"
+import (
+	"net"
+	"srcds_proxy/utils"
+)
 
 type Connection interface {
 	InputChannel() <-chan Message
 	OutputChannel() chan<- Message
 }
 
-func NewClientConnection(done <-chan DoneEvent, conn *net.UDPConn, raddr net.UDPAddr, initialMsg Message) Connection {
+func NewClientConnection(done <-chan utils.DoneEvent, conn *net.UDPConn, raddr net.UDPAddr, initialMsg Message) Connection {
 	// Client connection is a connection that uses a listening socket. You have to provide the address where to respond,
 	// because a listening connection is not connected to a specific host.
 
@@ -36,7 +39,7 @@ func NewClientConnection(done <-chan DoneEvent, conn *net.UDPConn, raddr net.UDP
 	}
 }
 
-func NewServerConnection(done <-chan DoneEvent, conn *net.UDPConn) Connection {
+func NewServerConnection(done <-chan utils.DoneEvent, conn *net.UDPConn) Connection {
 	// Server connection is a connection that uses a dedicated socket to communicate with the server.
 
 	// Listen on the connection and put all the messages recevied in the chan.

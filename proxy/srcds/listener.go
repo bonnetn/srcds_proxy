@@ -2,6 +2,7 @@ package srcds
 
 import (
 	"net"
+	"srcds_proxy/utils"
 )
 
 type Listener struct {
@@ -10,7 +11,7 @@ type Listener struct {
 
 var clientConnTable ConnectionTable
 
-func (l *Listener) Accept(done chan DoneEvent) <-chan Connection {
+func (l *Listener) Accept(done chan utils.DoneEvent) <-chan Connection {
 	result := make(chan Connection)
 	go func() {
 		defer close(result)
@@ -18,7 +19,7 @@ func (l *Listener) Accept(done chan DoneEvent) <-chan Connection {
 		for {
 			buffer := make([]byte, MaxDatagramSize)
 			n, raddr, err := l.conn.ReadFromUDP(buffer)
-			if IsDone(done) {
+			if utils.IsDone(done) {
 				return
 			}
 			if err != nil {

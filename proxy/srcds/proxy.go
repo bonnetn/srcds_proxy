@@ -3,9 +3,10 @@ package srcds
 import (
 	"net"
 	"srcds_proxy/proxy/config"
+	"srcds_proxy/utils"
 )
 
-func Listen(done <-chan DoneEvent, addr string) (*Listener, error) {
+func Listen(done <-chan utils.DoneEvent, addr string) (*Listener, error) {
 	conn, err := makeConnection(done, addr, true)
 	if err != nil {
 		return nil, err
@@ -16,13 +17,13 @@ func Listen(done <-chan DoneEvent, addr string) (*Listener, error) {
 
 }
 
-func AssociateWithServerConnection(done <-chan DoneEvent, connChan <-chan Connection) <-chan Binding {
+func AssociateWithServerConnection(done <-chan utils.DoneEvent, connChan <-chan Connection) <-chan Binding {
 	result := make(chan Binding)
 	go func() {
 		defer close(result)
 
 		for clientConnection := range connChan {
-			if IsDone(done) {
+			if utils.IsDone(done) {
 				return
 			}
 			udpConn, err := dial(done, config.ServerFullAddr)
@@ -39,11 +40,11 @@ func AssociateWithServerConnection(done <-chan DoneEvent, connChan <-chan Connec
 	return result
 }
 
-func dial(done <-chan DoneEvent, addr string) (*net.UDPConn, error) {
+func dial(done <-chan utils.DoneEvent, addr string) (*net.UDPConn, error) {
 	return makeConnection(done, addr, false)
 }
 
-func makeConnection(done <-chan DoneEvent, addr string, listening bool) (*net.UDPConn, error) {
+func makeConnection(done <-chan utils.DoneEvent, addr string, listening bool) (*net.UDPConn, error) {
 
 	// Listen will create a listening UDP ClientConnection.
 
