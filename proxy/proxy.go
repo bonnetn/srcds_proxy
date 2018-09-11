@@ -22,21 +22,22 @@ func Launch() error {
 	log.Println("INFO: Accepting connections.")
 	bindings := srcds.AssociateWithServerConnection(done, listener.Accept(done))
 	for bind := range bindings {
-		forwardMessages(done, bind.ServerConnection, bind.ClientConnection)
-		forwardMessages(done, bind.ClientConnection, bind.ServerConnection)
+		go forwardMessages(done, bind.ServerConnection, bind.ClientConnection)
+		go forwardMessages(done, bind.ClientConnection, bind.ServerConnection)
 	}
 	log.Println("INFO: Proxy stopped.")
 
 	return nil
 }
 
-func forwardMessages(done <-chan srcds.DoneEvent, from, to srcds.Connection) {
-	go func() {
-		for msg := range from.InputChannel() {
-			if srcds.IsDone(done) {
-				return
-			}
+func forwardMessages(done <-chan utils.DoneEvent, from, to srcds.Connection) {
+	var msg srcds.Message
+	for {
+		select {
+		case <-done:
+			return
+		case msg = <-from.InputChannel()
 			to.OutputChannel() <- msg
 		}
-	}()
+	}
 }
