@@ -8,9 +8,9 @@ type ConnectionTable struct {
 	sync.Map
 }
 
-func (tbl *ConnectionTable) GetOrReplace(addr AddressPort, conn Connection) (Connection, bool) {
+func (tbl *ConnectionTable) GetOrReplace(addr AddressPort, conn *ConnectionWithPacketChan) (*ConnectionWithPacketChan, bool) {
 	res, loaded := tbl.LoadOrStore(addr, conn)
-	return res.(Connection), loaded
+	return res.(*ConnectionWithPacketChan), loaded
 }
 
 func (tbl *ConnectionTable) Remove(addr AddressPort) {

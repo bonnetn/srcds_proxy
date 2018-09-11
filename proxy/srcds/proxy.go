@@ -32,7 +32,7 @@ func AssociateWithServerConnection(done <-chan utils.DoneEvent, connChan <-chan 
 			}
 
 			result <- Binding{
-				ServerConnection: NewServerConnection(done, udpConn),
+				ServerConnection: NewConnection(done, udpConn),
 				ClientConnection: clientConnection,
 			}
 		}

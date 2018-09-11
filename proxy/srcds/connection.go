@@ -5,20 +5,23 @@ import (
 	"srcds_proxy/utils"
 )
 
+type ConnectionWithPacketChan struct {
+	MsgChan     chan Message
+	Connection Connection
+}
+
 type Connection interface {
 	InputChannel() <-chan Message
 	OutputChannel() chan<- Message
 }
 
-func NewClientConnection(done <-chan utils.DoneEvent, conn *net.UDPConn, raddr net.UDPAddr, initialMsg Message) Connection {
-	// Client connection is a connection that uses a listening socket. You have to provide the address where to respond,
-	// because a listening connection is not connected to a specific host.
+func NewConnectionWithPacketChan(done <-chan utils.DoneEvent, conn *net.UDPConn, raddr net.UDPAddr) *ConnectionWithPacketChan {
+	// NewConnectionWithPacketChan creates a connection that uses a listening socket. You have to provide the address
+	// where to respond, because a listening connection is not connected to a specific host. You also have to provide
+	// the received packet in the MsgChan.
 
 	outputChan := make(chan Message)
 	inputChan := make(chan Message)
-	go func() {
-		inputChan <- initialMsg
-	}()
 	go func() {
 		defer close(outputChan)
 
@@ -33,14 +36,17 @@ func NewClientConnection(done <-chan utils.DoneEvent, conn *net.UDPConn, raddr n
 		}
 	}()
 
-	return &connection{
-		inputChannel:  inputChan,
-		outputChannel: outputChan,
+	return &ConnectionWithPacketChan{
+		MsgChan:     inputChan,
+		Connection: &connection{
+			inputChannel:  inputChan,
+			outputChannel: outputChan,
+		},
 	}
 }
 
-func NewServerConnection(done <-chan utils.DoneEvent, conn *net.UDPConn) Connection {
-	// Server connection is a connection that uses a dedicated socket to communicate with the server.
+func NewConnection(done <-chan utils.DoneEvent, conn *net.UDPConn) Connection {
+	// NewConnection created a connection that uses a dedicated socket to communicate with the server.
 
 	// Listen on the connection and put all the messages recevied in the chan.
 	inputChan := make(chan Message)
