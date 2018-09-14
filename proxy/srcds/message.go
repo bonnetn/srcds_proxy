@@ -9,7 +9,7 @@ func MessageToBytes(m Message) []byte {
 }
 
 func BytesToMessage(b []byte) Message {
-	c := make([]byte, len(b))
+	c := GetBufferPool().Get()
 	copy(c, b)
 	return c
 }

@@ -31,7 +31,8 @@ func NewConnectionWithPacketChan(done <-chan utils.DoneEvent, conn *net.UDPConn,
 			case <-done:
 				return
 			case msg = <-outputChan:
-				conn.WriteToUDP(MessageToBytes(msg), &raddr)
+				conn.WriteToUDP(msg, &raddr)
+				GetBufferPool().Put(msg)
 			}
 		}
 	}()
@@ -59,14 +60,16 @@ func NewConnection(done <-chan utils.DoneEvent, conn *net.UDPConn) Connection {
 			msg    Message
 			n      int
 			err    error
-			buffer = make([]byte, MaxDatagramSize)
+			buffer = GetBufferPool().Get()
 		)
+		defer GetBufferPool().Put(buffer)
 		for {
 			select {
 			case <-done:
 				return
 			case msg = <-outputChan:
-				conn.Write(MessageToBytes(msg))
+				conn.Write(msg)
+				GetBufferPool().Put(msg)
 			default:
 				n, _, err = conn.ReadFromUDP(buffer)
 				if err != nil {

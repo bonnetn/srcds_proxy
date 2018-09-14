@@ -16,8 +16,10 @@ func (l *Listener) Accept(done chan utils.DoneEvent) <-chan Connection {
 	go func() {
 		defer close(result)
 
+		buffer := GetBufferPool().Get()
+		defer GetBufferPool().Put(buffer)
+
 		for {
-			buffer := make([]byte, MaxDatagramSize)
 			n, raddr, err := l.conn.ReadFromUDP(buffer)
 			if utils.IsDone(done) {
 				return
@@ -30,7 +32,9 @@ func (l *Listener) Accept(done chan utils.DoneEvent) <-chan Connection {
 			if !loaded {
 				result <- clientConn.Connection
 			}
-			clientConn.MsgChan <- BytesToMessage(buffer[:n])
+			msg := GetBufferPool().Get()
+			copy(msg, buffer[:n])
+			clientConn.MsgChan <- msg
 		}
 
 	}()
