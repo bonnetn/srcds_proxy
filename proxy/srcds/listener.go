@@ -37,8 +37,8 @@ func (l *Listener) Accept(done chan utils.DoneEvent) <-chan Connection {
 			}
 			msg := GetBufferPool().Get()
 			copy(msg, buffer[:n])
-			clientConn.MsgChan <- msg
 			log.Println("DEBUG: New datagram received from world.")
+			clientConn.MsgChan <- msg[:n]
 		}
 
 	}()
