@@ -26,7 +26,7 @@ func AssociateWithServerConnection(done <-chan utils.DoneEvent, connChan <-chan 
 			if utils.IsDone(done) {
 				return
 			}
-			udpConn, err := dial(done, config.ServerFullAddr)
+			udpConn, err := dial(done, config.ServerAddr())
 			if err != nil {
 				return
 			}

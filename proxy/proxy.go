@@ -13,7 +13,7 @@ func Launch() error {
 
 	log.Println("INFO: Starting proxy...")
 	log.Println("INFO: Listening connections.")
-	listener, err := srcds.Listen(done, config.ListenFullAddr)
+	listener, err := srcds.Listen(done, config.ListenAddr())
 	if err != nil {
 		log.Println("ERR: Could not listen: ", err)
 		return err
