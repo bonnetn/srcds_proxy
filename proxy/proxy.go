@@ -22,6 +22,7 @@ func Launch() error {
 	log.Println("INFO: Accepting connections.")
 	bindings := srcds.AssociateWithServerConnection(done, listener.Accept(done))
 	for bind := range bindings {
+		log.Println("DEBUG: New binding received.")
 		go forwardMessages(done, bind.ServerConnection, bind.ClientConnection)
 		go forwardMessages(done, bind.ClientConnection, bind.ServerConnection)
 	}
@@ -37,6 +38,7 @@ func forwardMessages(done <-chan utils.DoneEvent, from, to srcds.Connection) {
 		case <-done:
 			return
 		case msg = <-from.InputChannel():
+			log.Println("DEBUG: Forward message ", len(msg))
 			to.OutputChannel() <- msg
 		}
 	}

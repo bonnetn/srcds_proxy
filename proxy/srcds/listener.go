@@ -3,6 +3,7 @@ package srcds
 import (
 	"net"
 	"srcds_proxy/utils"
+	"log"
 )
 
 type Listener struct {
@@ -28,13 +29,16 @@ func (l *Listener) Accept(done chan utils.DoneEvent) <-chan Connection {
 				return
 			}
 
+
 			clientConn, loaded := l.getOrCreateClientConn(done, raddr)
 			if !loaded {
 				result <- clientConn.Connection
+				log.Println("DEBUG: New connection created.")
 			}
 			msg := GetBufferPool().Get()
 			copy(msg, buffer[:n])
 			clientConn.MsgChan <- msg
+			log.Println("DEBUG: New datagram received from world.")
 		}
 
 	}()

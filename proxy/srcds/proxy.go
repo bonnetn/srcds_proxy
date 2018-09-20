@@ -4,6 +4,7 @@ import (
 	"net"
 	"srcds_proxy/proxy/config"
 	"srcds_proxy/utils"
+	"log"
 )
 
 func Listen(done <-chan utils.DoneEvent, addr string) (*Listener, error) {
@@ -26,10 +27,12 @@ func AssociateWithServerConnection(done <-chan utils.DoneEvent, connChan <-chan 
 			if utils.IsDone(done) {
 				return
 			}
+
 			udpConn, err := dial(done, config.ServerAddr())
 			if err != nil {
 				return
 			}
+			log.Println("DEBUG: New server connection created.")
 
 			result <- Binding{
 				ServerConnection: NewConnection(done, udpConn),
