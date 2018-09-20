@@ -3,10 +3,11 @@ package srcds
 import (
 	"net"
 	"srcds_proxy/utils"
+	"log"
 )
 
 type ConnectionWithPacketChan struct {
-	MsgChan     chan Message
+	MsgChan    chan Message
 	Connection Connection
 }
 
@@ -31,14 +32,17 @@ func NewConnectionWithPacketChan(done <-chan utils.DoneEvent, conn *net.UDPConn,
 			case <-done:
 				return
 			case msg = <-outputChan:
+				log.Println("DEBUG: [CLIENT_CON] Writing to client", len(msg))
 				conn.WriteToUDP(msg, &raddr)
+				log.Println("DEBUG: [CLIENT_CON] Wrote to client", len(msg))
 				GetBufferPool().Put(msg)
+				log.Println("DEBUG: [CLIENT_CON] freed buffer", len(msg))
 			}
 		}
 	}()
 
 	return &ConnectionWithPacketChan{
-		MsgChan:     inputChan,
+		MsgChan: inputChan,
 		Connection: &connection{
 			inputChannel:  inputChan,
 			outputChannel: outputChan,
@@ -49,33 +53,43 @@ func NewConnectionWithPacketChan(done <-chan utils.DoneEvent, conn *net.UDPConn,
 func NewConnection(done <-chan utils.DoneEvent, conn *net.UDPConn) Connection {
 	// NewConnection created a connection that uses a dedicated socket to communicate with the server.
 
-	// Listen on the connection and put all the messages recevied in the chan.
+	// Listen on the connection and put all the messages received in the chan.
 	inputChan := make(chan Message)
 	outputChan := make(chan Message)
+
 	go func() {
 		defer close(inputChan)
+
+		buffer := GetBufferPool().Get()
+		defer GetBufferPool().Put(buffer)
+
+		for {
+			n, _, err := conn.ReadFromUDP(buffer)
+			if utils.IsDone(done) {
+				return
+			}
+			if err != nil {
+				log.Println("ERROR: Error while reading server response.", err)
+				return
+			}
+			inputChan <- BytesToMessage(buffer[:n])
+		}
+	}()
+
+	go func() {
 		defer close(outputChan)
 
-		var (
-			msg    Message
-			n      int
-			err    error
-			buffer = GetBufferPool().Get()
-		)
-		defer GetBufferPool().Put(buffer)
+		var msg Message
 		for {
 			select {
 			case <-done:
 				return
 			case msg = <-outputChan:
+				log.Println("DEBUG: [SERV_CON] Write to server", len(msg))
 				conn.Write(msg)
+				log.Println("DEBUG: [SERV_CON] Wrote to server", len(msg))
 				GetBufferPool().Put(msg)
-			default:
-				n, _, err = conn.ReadFromUDP(buffer)
-				if err != nil {
-					return
-				}
-				inputChan <- BytesToMessage(buffer[:n])
+				log.Println("DEBUG: [SERV_CON] Freed buffer", len(msg))
 			}
 		}
 	}()

@@ -15,7 +15,7 @@ func Launch() error {
 	log.Println("INFO: Listening connections.")
 	listener, err := srcds.Listen(done, config.ListenAddr())
 	if err != nil {
-		log.Println("ERR: Could not listen: ", err)
+		log.Println("ERROR: Could not listen: ", err)
 		return err
 	}
 
@@ -38,8 +38,12 @@ func forwardMessages(done <-chan utils.DoneEvent, from, to srcds.Connection) {
 		case <-done:
 			return
 		case msg = <-from.InputChannel():
-			log.Println("DEBUG: Forward message ", len(msg))
+			if len(msg) <= 0 {
+				return
+			}
+			log.Println("DEBUG: [FORWARD] Message to forward ", len(msg))
 			to.OutputChannel() <- msg
+			log.Println("DEBUG: [FORWARD] Message forwarded in output channel", len(msg))
 		}
 	}
 }

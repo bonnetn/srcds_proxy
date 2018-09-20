@@ -33,12 +33,13 @@ func (l *Listener) Accept(done chan utils.DoneEvent) <-chan Connection {
 			clientConn, loaded := l.getOrCreateClientConn(done, raddr)
 			if !loaded {
 				result <- clientConn.Connection
-				log.Println("DEBUG: New connection created.")
+				log.Println("DEBUG: [ACCEPT] New connection created.")
 			}
 			msg := GetBufferPool().Get()
 			copy(msg, buffer[:n])
-			log.Println("DEBUG: New datagram received from world.")
+			log.Println("DEBUG: [ACCEPT] New datagram received from world.", n)
 			clientConn.MsgChan <- msg[:n]
+			log.Println("DEBUG: [ACCEPT] Datagram sent in MsgChan.", n)
 		}
 
 	}()
