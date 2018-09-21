@@ -1,6 +1,9 @@
-package srcds
+package model
 
-import "sync"
+import (
+	"sync"
+	"srcds_proxy/proxy/config"
+)
 
 type bufferPool struct {
 	pool sync.Pool
@@ -23,11 +26,11 @@ func GetBufferPool() *bufferPool {
 }
 
 func newBuffer() interface{} {
-	return make([]byte, MaxDatagramSize)
+	return make([]byte, config.MaxDatagramSize)
 }
 
 func (bp *bufferPool) Put(buffer []byte) {
-	bp.pool.Put(buffer[:MaxDatagramSize])
+	bp.pool.Put(buffer[:config.MaxDatagramSize])
 }
 
 func (bp *bufferPool) Get() []byte {

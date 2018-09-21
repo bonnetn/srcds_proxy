@@ -1,12 +1,13 @@
 package srcds
 
+import "srcds_proxy/proxy/srcds/model"
 
 type ConnectionWithPacketChan struct {
-	MsgChan    chan Message
+	MsgChan    chan model.Message
 	Connection Connection
 }
 
 type Connection interface {
-	InputChannel() <-chan Message
-	OutputChannel() chan<- Message
+	InputChannel() <-chan model.Message
+	OutputChannel() chan<- model.Message
 }

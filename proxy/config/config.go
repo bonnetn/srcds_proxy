@@ -27,6 +27,8 @@ var (
 	serverFullAddr = serverAddr + ":" + serverPort
 )
 
+const MaxDatagramSize = 4096
+
 func ListenAddr() string {
 	return listenFullAddr
 }

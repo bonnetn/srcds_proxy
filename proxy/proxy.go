@@ -5,6 +5,7 @@ import (
 	"srcds_proxy/proxy/config"
 	"srcds_proxy/utils"
 	"github.com/golang/glog"
+	"srcds_proxy/proxy/srcds/model"
 )
 
 func Launch() error {
@@ -33,7 +34,7 @@ func Launch() error {
 }
 
 func forwardMessages(done <-chan utils.DoneEvent, from, to srcds.Connection) {
-	var msg srcds.Message
+	var msg model.Message
 	for {
 		select {
 		case <-done:

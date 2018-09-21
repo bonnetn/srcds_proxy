@@ -4,6 +4,7 @@ import (
 	"net"
 	"srcds_proxy/utils"
 	"github.com/golang/glog"
+	"srcds_proxy/proxy/srcds/model"
 )
 
 type Listener struct {
@@ -17,8 +18,8 @@ func (l *Listener) Accept(done chan utils.DoneEvent) <-chan Connection {
 	go func() {
 		defer close(result)
 
-		buffer := GetBufferPool().Get()
-		defer GetBufferPool().Put(buffer)
+		buffer := model.GetBufferPool().Get()
+		defer model.GetBufferPool().Put(buffer)
 
 		for {
 			n, raddr, err := l.conn.ReadFromUDP(buffer)
@@ -35,7 +36,7 @@ func (l *Listener) Accept(done chan utils.DoneEvent) <-chan Connection {
 				result <- clientConn.Connection
 				glog.V(1).Info("Connection created.")
 			}
-			msg := GetBufferPool().Get()
+			msg := model.GetBufferPool().Get()
 			copy(msg, buffer[:n])
 			glog.V(3).Info("Received datagram of length ", n, " from a client.")
 			clientConn.MsgChan <- msg[:n]

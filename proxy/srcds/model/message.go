@@ -1,6 +1,5 @@
-package srcds
+package model
 
-const MaxDatagramSize = 4096
 
 type Message []byte
 

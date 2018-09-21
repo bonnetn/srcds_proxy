@@ -82,10 +82,10 @@ func makeConnection(done <-chan utils.DoneEvent, addr string, listening bool) (*
 
 func setSRCSConnectionOptions(connection *net.UDPConn) error {
 	// Set the buffers size
-	if err := connection.SetWriteBuffer(MaxDatagramSize); err != nil {
+	if err := connection.SetWriteBuffer(config.MaxDatagramSize); err != nil {
 		return err
 	}
-	if err := connection.SetReadBuffer(MaxDatagramSize); err != nil {
+	if err := connection.SetReadBuffer(config.MaxDatagramSize); err != nil {
 		return err
 	}
 	return nil
