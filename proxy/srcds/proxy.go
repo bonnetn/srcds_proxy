@@ -4,7 +4,7 @@ import (
 	"net"
 	"srcds_proxy/proxy/config"
 	"srcds_proxy/utils"
-	"log"
+		"github.com/golang/glog"
 )
 
 func Listen(done <-chan utils.DoneEvent, addr string) (*Listener, error) {
@@ -32,7 +32,7 @@ func AssociateWithServerConnection(done <-chan utils.DoneEvent, connChan <-chan 
 			if err != nil {
 				return
 			}
-			log.Println("DEBUG: New server connection created.")
+			glog.V(4).Info("New server connection created.")
 
 			result <- Binding{
 				ServerConnection: NewConnection(done, udpConn),

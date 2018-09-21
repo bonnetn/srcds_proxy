@@ -1,32 +1,33 @@
 package proxy
 
 import (
-	"log"
-	"srcds_proxy/proxy/srcds"
+		"srcds_proxy/proxy/srcds"
 	"srcds_proxy/proxy/config"
 	"srcds_proxy/utils"
+	"github.com/golang/glog"
 )
 
 func Launch() error {
 	done := make(chan utils.DoneEvent)
 	defer close(done)
 
-	log.Println("INFO: Starting proxy...")
-	log.Println("INFO: Listening connections.")
+	glog.Info("Starting proxy.")
+
+	glog.Info("Listening for new connections.")
 	listener, err := srcds.Listen(done, config.ListenAddr())
 	if err != nil {
-		log.Println("ERROR: Could not listen: ", err)
+		glog.Error("Could not listen", err)
 		return err
 	}
 
-	log.Println("INFO: Accepting connections.")
+	glog.Info("Accepting connections.")
 	bindings := srcds.AssociateWithServerConnection(done, listener.Accept(done))
 	for bind := range bindings {
-		log.Println("DEBUG: New binding received.")
+		glog.V(1).Info("New binding received, creating forward goroutines.")
 		go forwardMessages(done, bind.ServerConnection, bind.ClientConnection)
 		go forwardMessages(done, bind.ClientConnection, bind.ServerConnection)
 	}
-	log.Println("INFO: Proxy stopped.")
+	glog.Info("Proxy stopped.")
 
 	return nil
 }
@@ -41,9 +42,9 @@ func forwardMessages(done <-chan utils.DoneEvent, from, to srcds.Connection) {
 			if len(msg) <= 0 {
 				return
 			}
-			log.Println("DEBUG: [FORWARD] Message to forward ", len(msg))
+			glog.V(2).Info("Forwarding a message of length ", len(msg), ".")
 			to.OutputChannel() <- msg
-			log.Println("DEBUG: [FORWARD] Message forwarded in output channel", len(msg))
+			glog.V(2).Info("Successfully forwarded message of length ", len(msg),".")
 		}
 	}
 }

@@ -3,7 +3,7 @@ package srcds
 import (
 	"net"
 	"srcds_proxy/utils"
-	"log"
+	"github.com/golang/glog"
 )
 
 type Listener struct {
@@ -29,17 +29,17 @@ func (l *Listener) Accept(done chan utils.DoneEvent) <-chan Connection {
 				return
 			}
 
-
 			clientConn, loaded := l.getOrCreateClientConn(done, raddr)
 			if !loaded {
+				glog.V(1).Info("Packet received with no connection assigned, creating new connection.")
 				result <- clientConn.Connection
-				log.Println("DEBUG: [ACCEPT] New connection created.")
+				glog.V(1).Info("Connection created.")
 			}
 			msg := GetBufferPool().Get()
 			copy(msg, buffer[:n])
-			log.Println("DEBUG: [ACCEPT] New datagram received from world.", n)
+			glog.V(3).Info("Received datagram of length ", n, " from a client.")
 			clientConn.MsgChan <- msg[:n]
-			log.Println("DEBUG: [ACCEPT] Datagram sent in MsgChan.", n)
+			glog.V(3).Info("Forwarded datagram of length ", n, " in the input channel.")
 		}
 
 	}()
