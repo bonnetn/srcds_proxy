@@ -27,7 +27,7 @@ func newBuffer() interface{} {
 }
 
 func (bp *bufferPool) Put(buffer []byte) {
-	bp.pool.Put(buffer)
+	bp.pool.Put(buffer[:MaxDatagramSize])
 }
 
 func (bp *bufferPool) Get() []byte {
