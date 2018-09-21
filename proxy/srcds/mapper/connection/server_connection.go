@@ -1,4 +1,4 @@
-package srcds
+package connection
 
 import (
 	"srcds_proxy/utils"
@@ -7,8 +7,8 @@ import (
 	m "srcds_proxy/proxy/srcds/model"
 )
 
-func NewConnection(done <-chan utils.DoneEvent, conn *net.UDPConn) m.Connection {
-	// NewConnection created a connection that uses a dedicated socket to communicate with the server.
+func ToServerConnection(done <-chan utils.DoneEvent, conn *net.UDPConn) m.Connection {
+	// ToServerConnection created a connection that uses a dedicated socket to communicate with the server.
 
 	// Listen on the connection and put all the messages received in the chan.
 	inputChan := make(chan m.Message)

@@ -6,6 +6,7 @@ import (
 	"srcds_proxy/utils"
 	"github.com/golang/glog"
 	m "srcds_proxy/proxy/srcds/model"
+	connectionMapper "srcds_proxy/proxy/srcds/mapper/connection"
 )
 
 func Listen(done <-chan utils.DoneEvent, addr string) (*Listener, error) {
@@ -36,7 +37,7 @@ func AssociateWithServerConnection(done <-chan utils.DoneEvent, connChan <-chan 
 			glog.V(4).Info("New server connection created.")
 
 			result <- m.Binding{
-				ServerConnection: NewConnection(done, udpConn),
+				ServerConnection: connectionMapper.ToServerConnection(done, udpConn),
 				ClientConnection: clientConnection,
 			}
 		}

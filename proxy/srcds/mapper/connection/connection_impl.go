@@ -1,4 +1,4 @@
-package srcds
+package connection
 
 import m "srcds_proxy/proxy/srcds/model"
 

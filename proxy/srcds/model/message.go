@@ -1,6 +1,5 @@
 package model
 
-
 type Message []byte
 
 func MessageToBytes(m Message) []byte {

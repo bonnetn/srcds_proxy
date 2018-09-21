@@ -5,6 +5,7 @@ import (
 	"srcds_proxy/utils"
 	"github.com/golang/glog"
 	m "srcds_proxy/proxy/srcds/model"
+	connectionMapper "srcds_proxy/proxy/srcds/mapper/connection"
 )
 
 type Listener struct {
@@ -47,10 +48,10 @@ func (l *Listener) Accept(done chan utils.DoneEvent) <-chan m.Connection {
 	return result
 }
 
-func (l *Listener) getOrCreateClientConn(done <-chan utils.DoneEvent, raddr *net.UDPAddr) (*m.ConnectionWithPacketChan, bool) {
+func (l *Listener) getOrCreateClientConn(done <-chan utils.DoneEvent, raddr *net.UDPAddr) (*m.ConnectionWrapper, bool) {
 	// Create a new connection.
 	killNewClientConn := make(chan utils.DoneEvent)
-	newClientConn := NewConnectionWithPacketChan(channelOr(done, killNewClientConn), l.conn, *raddr)
+	newClientConn := connectionMapper.ToClientConnectionWrapper(channelOr(done, killNewClientConn), l.conn, *raddr)
 
 	clientConn, loaded := clientConnTable.GetOrReplace(m.UDPAddrToAddressPort(*raddr), newClientConn)
 	if loaded {

@@ -1,4 +1,4 @@
-package srcds
+package connection
 
 import (
 	"srcds_proxy/utils"
@@ -7,8 +7,8 @@ import (
 	m "srcds_proxy/proxy/srcds/model"
 )
 
-func NewConnectionWithPacketChan(done <-chan utils.DoneEvent, conn *net.UDPConn, raddr net.UDPAddr) *m.ConnectionWithPacketChan {
-	// NewConnectionWithPacketChan creates a connection that uses a listening socket. You have to provide the address
+func ToClientConnectionWrapper(done <-chan utils.DoneEvent, conn *net.UDPConn, raddr net.UDPAddr) *m.ConnectionWrapper {
+	// ToClientConnectionWrapper creates a connection that uses a listening socket. You have to provide the address
 	// where to respond, because a listening connection is not connected to a specific host. You also have to provide
 	// the received packet in the MsgChan.
 
@@ -32,7 +32,7 @@ func NewConnectionWithPacketChan(done <-chan utils.DoneEvent, conn *net.UDPConn,
 		}
 	}()
 
-	return &m.ConnectionWithPacketChan{
+	return &m.ConnectionWrapper{
 		MsgChan: inputChan,
 		Connection: &connection{
 			inputChannel:  inputChan,
