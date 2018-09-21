@@ -1,6 +1,6 @@
 package connection
 
-import m "srcds_proxy/proxy/srcds/model"
+import m "github.com/bonnetn/srcds_proxy/proxy/srcds/model"
 
 type connection struct {
 	inputChannel  <-chan m.Message

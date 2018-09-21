@@ -2,11 +2,11 @@ package srcds
 
 import (
 	"net"
-	"srcds_proxy/proxy/config"
-	"srcds_proxy/utils"
+	"github.com/bonnetn/srcds_proxy/proxy/config"
+	"github.com/bonnetn/srcds_proxy/utils"
 	"github.com/golang/glog"
-	m "srcds_proxy/proxy/srcds/model"
-	connectionMapper "srcds_proxy/proxy/srcds/mapper/connection"
+	m "github.com/bonnetn/srcds_proxy/proxy/srcds/model"
+	connectionMapper "github.com/bonnetn/srcds_proxy/proxy/srcds/mapper/connection"
 )
 
 func Listen(done <-chan utils.DoneEvent, addr string) (*Listener, error) {

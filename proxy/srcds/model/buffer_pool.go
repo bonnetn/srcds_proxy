@@ -2,7 +2,7 @@ package model
 
 import (
 	"sync"
-	"srcds_proxy/proxy/config"
+	"github.com/bonnetn/srcds_proxy/proxy/config"
 )
 
 type bufferPool struct {

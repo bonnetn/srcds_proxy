@@ -1,11 +1,11 @@
 package proxy
 
 import (
-	"srcds_proxy/proxy/srcds"
-	"srcds_proxy/proxy/config"
-	"srcds_proxy/utils"
+	"github.com/bonnetn/srcds_proxy/proxy/srcds"
+	"github.com/bonnetn/srcds_proxy/proxy/config"
+	"github.com/bonnetn/srcds_proxy/utils"
 	"github.com/golang/glog"
-	m "srcds_proxy/proxy/srcds/model"
+	m "github.com/bonnetn/srcds_proxy/proxy/srcds/model"
 )
 
 func Launch() error {

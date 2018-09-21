@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"srcds_proxy/proxy"
+	"github.com/bonnetn/srcds_proxy/proxy"
 )
 
 func main() {

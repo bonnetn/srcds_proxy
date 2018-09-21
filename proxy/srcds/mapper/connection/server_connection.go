@@ -1,10 +1,10 @@
 package connection
 
 import (
-	"srcds_proxy/utils"
+	"github.com/bonnetn/srcds_proxy/utils"
 	"net"
 	"github.com/golang/glog"
-	m "srcds_proxy/proxy/srcds/model"
+	m "github.com/bonnetn/srcds_proxy/proxy/srcds/model"
 )
 
 func ToServerConnection(done <-chan utils.DoneEvent, conn *net.UDPConn) m.Connection {

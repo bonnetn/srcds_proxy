@@ -2,10 +2,10 @@ package srcds
 
 import (
 	"net"
-	"srcds_proxy/utils"
+	"github.com/bonnetn/srcds_proxy/utils"
 	"github.com/golang/glog"
-	m "srcds_proxy/proxy/srcds/model"
-	connectionMapper "srcds_proxy/proxy/srcds/mapper/connection"
+	m "github.com/bonnetn/srcds_proxy/proxy/srcds/model"
+	connectionMapper "github.com/bonnetn/srcds_proxy/proxy/srcds/mapper/connection"
 )
 
 type Listener struct {
