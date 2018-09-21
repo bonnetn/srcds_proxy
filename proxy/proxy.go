@@ -13,6 +13,8 @@ func Launch() error {
 	defer close(done)
 
 	glog.Info("Starting proxy.")
+	glog.Info("Listen address: ", config.ListenAddr())
+	glog.Info("Server address: ", config.ServerAddr())
 
 	glog.Info("Listening for new connections.")
 	listener, err := srcds.Listen(done, config.ListenAddr())
