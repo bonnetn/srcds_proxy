@@ -1,4 +1,4 @@
-package srcds
+package model
 
 import (
 	"sync"

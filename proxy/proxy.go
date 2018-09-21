@@ -1,11 +1,11 @@
 package proxy
 
 import (
-		"srcds_proxy/proxy/srcds"
+	"srcds_proxy/proxy/srcds"
 	"srcds_proxy/proxy/config"
 	"srcds_proxy/utils"
 	"github.com/golang/glog"
-	"srcds_proxy/proxy/srcds/model"
+	m "srcds_proxy/proxy/srcds/model"
 )
 
 func Launch() error {
@@ -33,8 +33,8 @@ func Launch() error {
 	return nil
 }
 
-func forwardMessages(done <-chan utils.DoneEvent, from, to srcds.Connection) {
-	var msg model.Message
+func forwardMessages(done <-chan utils.DoneEvent, from, to m.Connection) {
+	var msg m.Message
 	for {
 		select {
 		case <-done:
@@ -45,7 +45,7 @@ func forwardMessages(done <-chan utils.DoneEvent, from, to srcds.Connection) {
 			}
 			glog.V(2).Info("Forwarding a message of length ", len(msg), ".")
 			to.OutputChannel() <- msg
-			glog.V(2).Info("Successfully forwarded message of length ", len(msg),".")
+			glog.V(2).Info("Successfully forwarded message of length ", len(msg), ".")
 		}
 	}
 }

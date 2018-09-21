@@ -4,7 +4,8 @@ import (
 	"net"
 	"srcds_proxy/proxy/config"
 	"srcds_proxy/utils"
-		"github.com/golang/glog"
+	"github.com/golang/glog"
+	m "srcds_proxy/proxy/srcds/model"
 )
 
 func Listen(done <-chan utils.DoneEvent, addr string) (*Listener, error) {
@@ -18,8 +19,8 @@ func Listen(done <-chan utils.DoneEvent, addr string) (*Listener, error) {
 
 }
 
-func AssociateWithServerConnection(done <-chan utils.DoneEvent, connChan <-chan Connection) <-chan Binding {
-	result := make(chan Binding)
+func AssociateWithServerConnection(done <-chan utils.DoneEvent, connChan <-chan m.Connection) <-chan m.Binding {
+	result := make(chan m.Binding)
 	go func() {
 		defer close(result)
 
@@ -34,7 +35,7 @@ func AssociateWithServerConnection(done <-chan utils.DoneEvent, connChan <-chan 
 			}
 			glog.V(4).Info("New server connection created.")
 
-			result <- Binding{
+			result <- m.Binding{
 				ServerConnection: NewConnection(done, udpConn),
 				ClientConnection: clientConnection,
 			}

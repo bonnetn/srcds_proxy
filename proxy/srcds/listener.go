@@ -4,22 +4,22 @@ import (
 	"net"
 	"srcds_proxy/utils"
 	"github.com/golang/glog"
-	"srcds_proxy/proxy/srcds/model"
+	m "srcds_proxy/proxy/srcds/model"
 )
 
 type Listener struct {
 	conn *net.UDPConn
 }
 
-var clientConnTable ConnectionTable
+var clientConnTable m.ConnectionTable
 
-func (l *Listener) Accept(done chan utils.DoneEvent) <-chan Connection {
-	result := make(chan Connection)
+func (l *Listener) Accept(done chan utils.DoneEvent) <-chan m.Connection {
+	result := make(chan m.Connection)
 	go func() {
 		defer close(result)
 
-		buffer := model.GetBufferPool().Get()
-		defer model.GetBufferPool().Put(buffer)
+		buffer := m.GetBufferPool().Get()
+		defer m.GetBufferPool().Put(buffer)
 
 		for {
 			n, raddr, err := l.conn.ReadFromUDP(buffer)
@@ -36,7 +36,7 @@ func (l *Listener) Accept(done chan utils.DoneEvent) <-chan Connection {
 				result <- clientConn.Connection
 				glog.V(1).Info("Connection created.")
 			}
-			msg := model.GetBufferPool().Get()
+			msg := m.GetBufferPool().Get()
 			copy(msg, buffer[:n])
 			glog.V(3).Info("Received datagram of length ", n, " from a client.")
 			clientConn.MsgChan <- msg[:n]
@@ -47,12 +47,12 @@ func (l *Listener) Accept(done chan utils.DoneEvent) <-chan Connection {
 	return result
 }
 
-func (l *Listener) getOrCreateClientConn(done <-chan utils.DoneEvent, raddr *net.UDPAddr) (*ConnectionWithPacketChan, bool) {
+func (l *Listener) getOrCreateClientConn(done <-chan utils.DoneEvent, raddr *net.UDPAddr) (*m.ConnectionWithPacketChan, bool) {
 	// Create a new connection.
 	killNewClientConn := make(chan utils.DoneEvent)
 	newClientConn := NewConnectionWithPacketChan(channelOr(done, killNewClientConn), l.conn, *raddr)
 
-	clientConn, loaded := clientConnTable.GetOrReplace(UDPAddrToAddressPort(*raddr), newClientConn)
+	clientConn, loaded := clientConnTable.GetOrReplace(m.UDPAddrToAddressPort(*raddr), newClientConn)
 	if loaded {
 		close(killNewClientConn) // If this connection is not used, kill the workers related to that connection.
 	}

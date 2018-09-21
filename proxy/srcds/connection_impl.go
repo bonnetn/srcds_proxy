@@ -1,16 +1,16 @@
 package srcds
 
-import "srcds_proxy/proxy/srcds/model"
+import m "srcds_proxy/proxy/srcds/model"
 
 type connection struct {
-	inputChannel  <-chan model.Message
-	outputChannel chan<- model.Message
+	inputChannel  <-chan m.Message
+	outputChannel chan<- m.Message
 }
 
-func (c *connection) OutputChannel() chan<- model.Message {
+func (c *connection) OutputChannel() chan<- m.Message {
 	return c.outputChannel
 }
 
-func (c *connection) InputChannel() <-chan model.Message {
+func (c *connection) InputChannel() <-chan m.Message {
 	return c.inputChannel
 }
