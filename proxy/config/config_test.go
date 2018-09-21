@@ -5,12 +5,13 @@ import (
 	"os"
 	"runtime"
 )
+
 const (
 	testIP   = "1.2.3.4"
 	testPort = "7532"
 )
 
-func Test_getEnvOrDefault(t *testing.T) {
+func TestGetEnvOrDefault(t *testing.T) {
 	type args struct {
 		envKey       string
 		defaultValue string
