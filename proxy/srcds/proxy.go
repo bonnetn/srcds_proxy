@@ -2,13 +2,15 @@ package srcds
 
 import (
 	"net"
+
 	"github.com/bonnetn/srcds_proxy/proxy/config"
+	connectionMapper "github.com/bonnetn/srcds_proxy/proxy/srcds/mapper/connection"
+	m "github.com/bonnetn/srcds_proxy/proxy/srcds/model"
 	"github.com/bonnetn/srcds_proxy/utils"
 	"github.com/golang/glog"
-	m "github.com/bonnetn/srcds_proxy/proxy/srcds/model"
-	connectionMapper "github.com/bonnetn/srcds_proxy/proxy/srcds/mapper/connection"
 )
 
+// Listen creates a Listener from an address.
 func Listen(done <-chan utils.DoneEvent, addr string) (*Listener, error) {
 	conn, err := makeConnection(done, addr, true)
 	if err != nil {
@@ -20,6 +22,7 @@ func Listen(done <-chan utils.DoneEvent, addr string) (*Listener, error) {
 
 }
 
+// AssociateWithServerConnection binds a new connection to the server for every connection it receives.
 func AssociateWithServerConnection(done <-chan utils.DoneEvent, connChan <-chan m.Connection) <-chan m.Binding {
 	result := make(chan m.Binding)
 	go func() {
@@ -51,8 +54,6 @@ func dial(done <-chan utils.DoneEvent, addr string) (*net.UDPConn, error) {
 
 func makeConnection(done <-chan utils.DoneEvent, addr string, listening bool) (*net.UDPConn, error) {
 
-	// Listen will create a listening UDP ClientConnection.
-
 	// First create the UDP listening ClientConnection.
 	laddr, err := net.ResolveUDPAddr("udp", addr)
 	if err != nil {
@@ -76,7 +77,9 @@ func makeConnection(done <-chan utils.DoneEvent, addr string, listening bool) (*
 	// Close on done
 	go func() {
 		<-done
-		udpConn.Close()
+		if err := udpConn.Close(); err != nil {
+			glog.Error("Could not close connection: ", err)
+		}
 	}()
 
 	return udpConn, nil

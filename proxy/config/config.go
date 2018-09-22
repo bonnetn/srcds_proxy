@@ -1,17 +1,13 @@
 package config
 
 import (
-	"runtime"
 	"os"
+	"runtime"
 	"sync"
-	"github.com/golang/glog"
-	"time"
+		"github.com/golang/glog"
 )
 
 const (
-	HandleTimeout           = 5 * time.Second
-	ServerConnectionTimeout = 1 * time.Minute
-
 	defaultListenIP   = "0.0.0.0"
 	defaultListenPort = "27015"
 	defaultServerIP   = "192.168.0.2"
@@ -30,28 +26,32 @@ var (
 	once           sync.Once
 )
 
+// MaxDatagramSize is the size of the buffer allocated to receive messages.
 const MaxDatagramSize = 4096
 
+// ListenAddr returns the listen address of the proxy.
 func ListenAddr() string {
 	once.Do(extractConfFromEnvVars)
 	return listenFullAddr
 }
 
+// ServerAddr returns the address of the SRCDS server.
 func ServerAddr() string {
 	once.Do(extractConfFromEnvVars)
 	return serverFullAddr
 }
 
+// WorkerCount returns the number of workers that will process incoming datagrams in parallel.
 func WorkerCount() int {
 	return workerCount
 }
 
+
 func getEnvOrDefault(envKey string, defaultValue string) string {
 	if v, ok := os.LookupEnv(envKey); ok {
 		return v
-	} else {
-		return defaultValue
 	}
+	return defaultValue
 }
 
 func extractConfFromEnvVars() {

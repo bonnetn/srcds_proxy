@@ -1,16 +1,17 @@
 package model
 
 import (
-	"net"
 	"fmt"
+	"net"
 )
 
+// AddressPort is the IP address+port of a client. This can be used as a key in a map.
 type AddressPort struct {
-	// AddressPort is the IP address+port of a client. This can be used as a key in a map.
 	port uint16
 	ip   [4]uint8
 }
 
+// UDPAddrToAddressPort maps a UDPAddr to a AddressPort structure.
 func UDPAddrToAddressPort(udpAddr net.UDPAddr) AddressPort {
 	ip := udpAddr.IP.To4()
 	return AddressPort{

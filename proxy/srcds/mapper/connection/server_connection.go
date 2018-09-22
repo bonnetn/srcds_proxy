@@ -1,15 +1,15 @@
 package connection
 
 import (
-	"github.com/bonnetn/srcds_proxy/utils"
 	"net"
-	"github.com/golang/glog"
+
 	m "github.com/bonnetn/srcds_proxy/proxy/srcds/model"
+	"github.com/bonnetn/srcds_proxy/utils"
+	"github.com/golang/glog"
 )
 
+// ToServerConnection created a connection that uses a dedicated socket to communicate with the server.
 func ToServerConnection(done <-chan utils.DoneEvent, conn *net.UDPConn) m.Connection {
-	// ToServerConnection created a connection that uses a dedicated socket to communicate with the server.
-
 	// Listen on the connection and put all the messages received in the chan.
 	inputChan := make(chan m.Message)
 	outputChan := make(chan m.Message)
@@ -42,11 +42,15 @@ func ToServerConnection(done <-chan utils.DoneEvent, conn *net.UDPConn) m.Connec
 			case <-done:
 				return
 			case msg = <-outputChan:
-				glog.V(4).Info("Writing ", len(msg), " bytes to server.")
-				conn.Write(msg)
-				glog.V(4).Info("Successfully sent ", len(msg), " bytes to server.")
-				m.GetBufferPool().Put(msg)
-				glog.V(4).Info("Freed the buffer.")
+				func() {
+					defer m.GetBufferPool().Put(msg)
+					glog.V(4).Info("Writing ", len(msg), " bytes to server.")
+					if _, err := conn.Write(msg); err != nil {
+						glog.Error("Error while writing to server: ", err)
+						return
+					}
+					glog.V(4).Info("Successfully sent ", len(msg), " bytes to server.")
+				}()
 			}
 		}
 	}()

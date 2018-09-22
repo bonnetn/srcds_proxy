@@ -2,18 +2,21 @@ package srcds
 
 import (
 	"net"
+
+	connectionMapper "github.com/bonnetn/srcds_proxy/proxy/srcds/mapper/connection"
+	m "github.com/bonnetn/srcds_proxy/proxy/srcds/model"
 	"github.com/bonnetn/srcds_proxy/utils"
 	"github.com/golang/glog"
-	m "github.com/bonnetn/srcds_proxy/proxy/srcds/model"
-	connectionMapper "github.com/bonnetn/srcds_proxy/proxy/srcds/mapper/connection"
 )
 
+// Listener is a  wrapper around UDPConn that is used to listen of SRCDS connections.
 type Listener struct {
 	conn *net.UDPConn
 }
 
 var clientConnTable m.ConnectionTable
 
+// Accept listens for new datagrams and create new connections if datagrams from an unknown source is received.
 func (l *Listener) Accept(done chan utils.DoneEvent) <-chan m.Connection {
 	result := make(chan m.Connection)
 	go func() {

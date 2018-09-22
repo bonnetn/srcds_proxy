@@ -2,21 +2,24 @@ package model
 
 import (
 	"sync"
+
 	"github.com/bonnetn/srcds_proxy/proxy/config"
 )
 
-type bufferPool struct {
+// BufferPool is a wrapper around sync.Pool that is type-safe.
+type BufferPool struct {
 	pool sync.Pool
 }
 
 var (
-	singletonBufferPool *bufferPool
+	singletonBufferPool *BufferPool
 	once                sync.Once
 )
 
-func GetBufferPool() *bufferPool {
+// GetBufferPool returns the BufferPool (singleton).
+func GetBufferPool() *BufferPool {
 	once.Do(func() {
-		singletonBufferPool = &bufferPool{
+		singletonBufferPool = &BufferPool{
 			pool: sync.Pool{
 				New: newBuffer,
 			},
@@ -29,10 +32,12 @@ func newBuffer() interface{} {
 	return make([]byte, config.MaxDatagramSize)
 }
 
-func (bp *bufferPool) Put(buffer []byte) {
+// Put adds a new buffer in the pool to be re-used.
+func (bp *BufferPool) Put(buffer []byte) {
 	bp.pool.Put(buffer[:config.MaxDatagramSize])
 }
 
-func (bp *bufferPool) Get() []byte {
+// Get removes a buffer from the pool.
+func (bp *BufferPool) Get() []byte {
 	return bp.pool.Get().([]byte)
 }
