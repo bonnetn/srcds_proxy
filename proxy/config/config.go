@@ -4,7 +4,8 @@ import (
 	"os"
 	"runtime"
 	"sync"
-		"github.com/golang/glog"
+
+	"github.com/golang/glog"
 )
 
 const (

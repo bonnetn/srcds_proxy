@@ -1,14 +1,17 @@
 package proxy
 
 import (
-	"github.com/bonnetn/srcds_proxy/proxy/srcds"
 	"github.com/bonnetn/srcds_proxy/proxy/config"
+	"github.com/bonnetn/srcds_proxy/proxy/srcds"
+	m "github.com/bonnetn/srcds_proxy/proxy/srcds/model"
 	"github.com/bonnetn/srcds_proxy/utils"
 	"github.com/golang/glog"
-	m "github.com/bonnetn/srcds_proxy/proxy/srcds/model"
 )
 
+// Launch launches the proxy.
 func Launch() error {
+	srcds.Init()
+
 	done := make(chan utils.DoneEvent)
 	defer close(done)
 

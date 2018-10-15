@@ -16,6 +16,11 @@ type Listener struct {
 
 var clientConnTable m.ConnectionTable
 
+// Init initialize the SRCDS client.
+func Init() {
+	clientConnTable = m.NewConnectionTable()
+}
+
 // Accept listens for new datagrams and create new connections if datagrams from an unknown source is received.
 func (l *Listener) Accept(done chan utils.DoneEvent) <-chan m.Connection {
 	result := make(chan m.Connection)
