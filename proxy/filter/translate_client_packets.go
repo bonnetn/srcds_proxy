@@ -9,7 +9,7 @@ import (
 	"github.com/golang/glog"
 )
 
-func translateSingleClPacket(ctx models.ProxyContext, packet *models.Packet, clientConn *net.UDPConn) error {
+func translateSingleClPacket(ctx models.ProxyContext, packet *models.Packet) error {
 	if bytes.Equal(packet.Src.IP[:], ctx.ServerHost.IP[:]) {
 		return nil // Sent from the server, not from a client.
 	}
@@ -111,12 +111,12 @@ func createWorker(ctx models.ProxyContext, conn *net.UDPConn) error {
 }
 
 // TranslateClientPackets takes packets sent to the proxy and translate the IP and connection to the server.
-func TranslateClientPackets(ctx models.ProxyContext, packetQueue <-chan models.Packet, clientConn *net.UDPConn) <-chan models.Packet {
+func TranslateClientPackets(ctx models.ProxyContext, packetQueue <-chan models.Packet) <-chan models.Packet {
 	result := make(models.PacketQueue)
 	go func() {
 		for {
 			pkt := <-packetQueue
-			err := translateSingleClPacket(ctx, &pkt, clientConn)
+			err := translateSingleClPacket(ctx, &pkt)
 			if err != nil {
 				glog.Error("Could not translate client packet.", err)
 			}

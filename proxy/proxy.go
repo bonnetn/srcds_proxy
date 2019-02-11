@@ -60,7 +60,7 @@ func Launch() error {
 	}
 
 	queue := (<-chan models.Packet)(ctx.RootQueue)
-	queue = filter.TranslateClientPackets(ctx, queue, clientConn)
+	queue = filter.TranslateClientPackets(ctx, queue)
 	queue = filter.TranslateServerPackets(ctx, queue, clientConn)
 	filter.SendQueue(queue, clientConn)
 
