@@ -1,10 +1,9 @@
 package proxy
 
 import (
-	"net"
-
 	"github.com/bonnetn/srcds_proxy/proxy/config"
 	"github.com/bonnetn/srcds_proxy/proxy/filter"
+	"github.com/bonnetn/srcds_proxy/proxy/mapper"
 	"github.com/bonnetn/srcds_proxy/proxy/models"
 	"github.com/golang/glog"
 )
@@ -16,21 +15,12 @@ func Launch() error {
 	glog.Info("Listen address: ", config.ListenAddr())
 	glog.Info("Proxy to address: ", config.ServerAddr())
 
-	listenAddr, err := net.ResolveUDPAddr("udp4", config.ListenAddr())
+	listenHost, err := mapper.StringToHost(config.ListenAddr())
 	if err != nil {
 		glog.Fatal(err)
 	}
 
-	listenHost, err := models.UDPAddrToHost(listenAddr)
-	if err != nil {
-		glog.Fatal(err)
-	}
-
-	dstAddr, err := net.ResolveUDPAddr("udp4", config.ServerAddr())
-	if err != nil {
-		glog.Fatal(err)
-	}
-	dstHost, err := models.UDPAddrToHost(dstAddr)
+	dstHost, err := mapper.StringToHost(config.ServerAddr())
 	if err != nil {
 		glog.Fatal(err)
 	}

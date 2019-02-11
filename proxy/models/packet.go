@@ -9,12 +9,6 @@ import (
 // UDPMaxSize is the maximum size of a UDP datagram.
 const UDPMaxSize = 65507
 
-// Host is an IPv4 + its associated port.
-type Host struct {
-	IP   [4]byte
-	Port uint16
-}
-
 // HostToUDPAddr converts a Host object into a net.UDPAddr object.
 func HostToUDPAddr(host *Host) *net.UDPAddr {
 	port := int(host.Port)
