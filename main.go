@@ -5,7 +5,7 @@ import (
 
 	"github.com/bonnetn/srcds_proxy/proxy"
 	"github.com/golang/glog"
-)
+	)
 
 func main() {
 	flag.Parse()

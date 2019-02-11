@@ -27,9 +27,6 @@ var (
 	once           sync.Once
 )
 
-// MaxDatagramSize is the size of the buffer allocated to receive messages.
-const MaxDatagramSize = 4096
-
 // ListenAddr returns the listen address of the proxy.
 func ListenAddr() string {
 	once.Do(extractConfFromEnvVars)
@@ -46,7 +43,6 @@ func ServerAddr() string {
 func WorkerCount() int {
 	return workerCount
 }
-
 
 func getEnvOrDefault(envKey string, defaultValue string) string {
 	if v, ok := os.LookupEnv(envKey); ok {

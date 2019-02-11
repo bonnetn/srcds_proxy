@@ -1,56 +1,69 @@
 package proxy
 
 import (
+	"net"
+
 	"github.com/bonnetn/srcds_proxy/proxy/config"
-	"github.com/bonnetn/srcds_proxy/proxy/srcds"
-	m "github.com/bonnetn/srcds_proxy/proxy/srcds/model"
-	"github.com/bonnetn/srcds_proxy/utils"
+	"github.com/bonnetn/srcds_proxy/proxy/filter"
+	"github.com/bonnetn/srcds_proxy/proxy/models"
 	"github.com/golang/glog"
 )
 
+func makeInitialPacketQueue(listenAddr *models.Host) (models.PacketQueue, *net.UDPConn) {
+
+	packetConn, err := net.ListenUDP("udp4", models.HostToUDPAddr(listenAddr))
+	if err != nil {
+		glog.Fatal(err)
+	}
+
+	packetQueue := make(models.PacketQueue)
+	go func() {
+		packetQueue.TransferIncomingPackets(packetConn, *listenAddr)
+	}()
+	return packetQueue, packetConn
+
+}
+
 // Launch launches the proxy.
 func Launch() error {
-	srcds.Init()
-
-	done := make(chan utils.DoneEvent)
-	defer close(done)
 
 	glog.Info("Starting proxy.")
 	glog.Info("Listen address: ", config.ListenAddr())
-	glog.Info("Server address: ", config.ServerAddr())
+	glog.Info("Proxy to address: ", config.ServerAddr())
 
-	glog.Info("Listening for new connections.")
-	listener, err := srcds.Listen(done, config.ListenAddr())
+	listenAddr, err := net.ResolveUDPAddr("udp4", config.ListenAddr())
 	if err != nil {
-		glog.Error("Could not listen", err)
-		return err
+		glog.Fatal(err)
 	}
 
-	glog.Info("Accepting connections.")
-	bindings := srcds.AssociateWithServerConnection(done, listener.Accept(done))
-	for bind := range bindings {
-		glog.V(1).Info("New binding received, creating forward goroutines.")
-		go forwardMessages(done, bind.ServerConnection, bind.ClientConnection)
-		go forwardMessages(done, bind.ClientConnection, bind.ServerConnection)
+	listenHost, err := models.UDPAddrToHost(listenAddr)
+	if err != nil {
+		glog.Fatal(err)
 	}
-	glog.Info("Proxy stopped.")
+
+	dstAddr, err := net.ResolveUDPAddr("udp4", config.ServerAddr())
+	if err != nil {
+		glog.Fatal(err)
+	}
+	dstHost, err := models.UDPAddrToHost(dstAddr)
+	if err != nil {
+		glog.Fatal(err)
+	}
+
+	rootQueue, clientConn := makeInitialPacketQueue(listenHost)
+	ctx := models.ProxyContext{
+		ClientToServerTbl: &models.NatTable{},
+		ServerToClientTbl: &models.NatTable{},
+		ServerHost:        dstHost,
+		ProxyHost:         listenHost,
+		RootQueue:         rootQueue,
+	}
+
+	queue := (<-chan models.Packet)(ctx.RootQueue)
+	queue = filter.TranslateClientPackets(ctx, queue, clientConn)
+	queue = filter.TranslateServerPackets(ctx, queue, clientConn)
+	filter.SendQueue(queue, clientConn)
 
 	return nil
-}
 
-func forwardMessages(done <-chan utils.DoneEvent, from, to m.Connection) {
-	var msg m.Message
-	for {
-		select {
-		case <-done:
-			return
-		case msg = <-from.InputChannel():
-			if len(msg) <= 0 {
-				return
-			}
-			glog.V(2).Info("Forwarding a message of length ", len(msg), ".")
-			to.OutputChannel() <- msg
-			glog.V(2).Info("Successfully forwarded message of length ", len(msg), ".")
-		}
-	}
 }
