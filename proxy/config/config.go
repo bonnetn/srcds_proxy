@@ -2,7 +2,6 @@ package config
 
 import (
 	"os"
-	"runtime"
 	"sync"
 
 	"github.com/golang/glog"
@@ -21,7 +20,6 @@ const (
 )
 
 var (
-	workerCount    = runtime.NumCPU()
 	listenFullAddr string
 	serverFullAddr string
 	once           sync.Once
@@ -37,11 +35,6 @@ func ListenAddr() string {
 func ServerAddr() string {
 	once.Do(extractConfFromEnvVars)
 	return serverFullAddr
-}
-
-// WorkerCount returns the number of workers that will process incoming datagrams in parallel.
-func WorkerCount() int {
-	return workerCount
 }
 
 func getEnvOrDefault(envKey string, defaultValue string) string {
