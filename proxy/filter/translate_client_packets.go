@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"net"
 
+	"github.com/bonnetn/srcds_proxy/proxy/mapper"
 	"github.com/bonnetn/srcds_proxy/proxy/models"
 	"github.com/golang/glog"
 )
@@ -26,7 +27,7 @@ func translateSingleClPacket(ctx models.ProxyContext, packet *models.Packet) err
 	glog.Infof("New connection received from %v.", packet.Src)
 
 	// Create connection
-	conn, err := net.DialUDP("udp4", nil, models.HostToUDPAddr(ctx.ServerHost))
+	conn, err := net.DialUDP("udp4", nil, mapper.HostToUDPAddr(ctx.ServerHost))
 	if err != nil {
 		return err
 	}
@@ -50,7 +51,7 @@ func translateSingleClPacket(ctx models.ProxyContext, packet *models.Packet) err
 	}
 
 	// Try to store the binding
-	localHost, err := models.UDPAddrToHost(addr)
+	localHost, err := mapper.UDPAddrToHost(addr)
 	if err != nil {
 		return err
 	}
@@ -73,7 +74,7 @@ func createWorker(ctx models.ProxyContext, conn *net.UDPConn) error {
 	if err != nil {
 		return err
 	}
-	destHost, err := models.UDPAddrToHost(destAddr)
+	destHost, err := mapper.UDPAddrToHost(destAddr)
 	if err != nil {
 		return err
 	}
@@ -88,7 +89,7 @@ func createWorker(ctx models.ProxyContext, conn *net.UDPConn) error {
 				continue
 			}
 
-			clientHost, err := models.UDPAddrToHost(clientAddr)
+			clientHost, err := mapper.UDPAddrToHost(clientAddr)
 			if err != nil {
 				glog.Error("Could not get client host.", err)
 				continue
