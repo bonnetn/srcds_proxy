@@ -14,7 +14,7 @@ func translateSingleSvPacket(ctx models.ProxyContext, packet *models.Packet, cli
 		return // Sent from a client, not from the server.
 	}
 
-	dst, ok := ctx.ServerToClientTbl.LoadHost(packet.Dst)
+	dst, ok := ctx.ServerToClientTbl[packet.Dst]
 	if !ok {
 		glog.Warningf("Could not route  response from server to %v", packet.Dst)
 		return

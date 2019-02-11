@@ -2,7 +2,6 @@ package filter
 
 import (
 	"bytes"
-	"errors"
 	"net"
 
 	"github.com/bonnetn/srcds_proxy/proxy/models"
@@ -56,10 +55,7 @@ func translateSingleClPacket(ctx models.ProxyContext, packet *models.Packet) err
 		return err
 	}
 
-	_, loaded = ctx.ServerToClientTbl.LoadOrStoreHost(*localHost, packet.Src)
-	if loaded {
-		return errors.New("there is already a connection associated with that proxy address/port")
-	}
+	ctx.ServerToClientTbl[*localHost] = &packet.Src
 
 	// Make a new worker that will put  the incoming packets into the queue.
 	if err := createWorker(ctx, newConn); err != nil {

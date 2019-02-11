@@ -38,7 +38,7 @@ func Launch() error {
 	rootQueue, clientConn := createQueueFromConn(listenHost)
 	ctx := models.ProxyContext{
 		ClientToServerTbl: &models.NatTable{},
-		ServerToClientTbl: &models.NatTable{},
+		ServerToClientTbl: map[models.Host]*models.Host{},
 		ServerHost:        dstHost,
 		ProxyHost:         listenHost,
 		RootQueue:         rootQueue,
