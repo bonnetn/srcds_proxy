@@ -9,21 +9,6 @@ import (
 	"github.com/golang/glog"
 )
 
-func makeInitialPacketQueue(listenAddr *models.Host) (models.PacketQueue, *net.UDPConn) {
-
-	packetConn, err := net.ListenUDP("udp4", models.HostToUDPAddr(listenAddr))
-	if err != nil {
-		glog.Fatal(err)
-	}
-
-	packetQueue := make(models.PacketQueue)
-	go func() {
-		packetQueue.TransferIncomingPackets(packetConn, *listenAddr)
-	}()
-	return packetQueue, packetConn
-
-}
-
 // Launch launches the proxy.
 func Launch() error {
 
@@ -50,7 +35,7 @@ func Launch() error {
 		glog.Fatal(err)
 	}
 
-	rootQueue, clientConn := makeInitialPacketQueue(listenHost)
+	rootQueue, clientConn := createQueueFromConn(listenHost)
 	ctx := models.ProxyContext{
 		ClientToServerTbl: &models.NatTable{},
 		ServerToClientTbl: &models.NatTable{},
